@@ -1,5 +1,5 @@
 from mini_db.conexion import conectar_db
-
+import psycopg2.extras
 def findByUserName(username):
     conexion = conectar_db()
     if not conexion:
