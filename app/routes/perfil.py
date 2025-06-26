@@ -1,3 +1,4 @@
+import logging
 from flask import Blueprint, request, jsonify
 from mini_db.conexion import conectar_db
 import psycopg2.extras  # ✅ Agregado
