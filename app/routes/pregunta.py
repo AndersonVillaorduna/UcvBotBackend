@@ -25,8 +25,8 @@ def procesar_pregunta():
         respuesta = model.generate_content(prompt).text.strip()
 
         v_id = str(uuid.uuid4())
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("SELECT 1 FROM chat_session WHERE session_id = %s", (session_id,))
         existe = cursor.fetchone()
@@ -42,9 +42,9 @@ def procesar_pregunta():
             VALUES (%s, %s, %s, %s, %s, NULL, %s)
         """, (v_id, prompt, user_uid, respuesta, datetime.datetime.now(), session_id))
 
-        conn.commit()
+        conexion.commit()
         cursor.close()
-        conn.close()
+        conexion.close()
 
         return jsonify({"respuesta": respuesta})
 
@@ -63,8 +63,8 @@ def crear_sesion():
         if not session_id or not student_id:
             return jsonify({"error": "Faltan datos"}), 400
 
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("SELECT 1 FROM chat_session WHERE session_id = %s", (session_id,))
         existe = cursor.fetchone()
@@ -74,10 +74,10 @@ def crear_sesion():
                 INSERT INTO chat_session (session_id, student_id)
                 VALUES (%s, %s)
             """, (session_id, student_id))
-            conn.commit()
+            conexion.commit()
 
         cursor.close()
-        conn.close()
+        conexion.close()
         return jsonify({"mensaje": "Sesión registrada correctamente"})
 
     except Exception as e:
@@ -88,8 +88,8 @@ def crear_sesion():
 @pregunta_bp.route('/historial/<session_id>/<student_id>', methods=['GET'])
 def obtener_historial(session_id, student_id):
     try:
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("""
             SELECT v_title, respuesta
@@ -100,7 +100,7 @@ def obtener_historial(session_id, student_id):
 
         mensajes = cursor.fetchall()
         cursor.close()
-        conn.close()
+        conexion.close()
 
         historial = []
         for pregunta, respuesta in mensajes:
@@ -117,8 +117,8 @@ def obtener_historial(session_id, student_id):
 @pregunta_bp.route('/sesiones/<student_id>', methods=['GET'])
 def obtener_sesiones(student_id):
     try:
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("""
             SELECT session_id, MAX(fecha) as ultima_fecha
@@ -130,7 +130,7 @@ def obtener_sesiones(student_id):
         sesiones = cursor.fetchall()
 
         cursor.close()
-        conn.close()
+        conexion.close()
 
         return jsonify([{"session_id": s[0], "ultima_fecha": s[1].isoformat()} for s in sesiones])
     except Exception as e:
@@ -178,13 +178,13 @@ El resultado debe ser un JSON válido de 20 objetos, sin explicaciones adicional
 @pregunta_bp.route('/CargarPreguntas', methods=['GET'])
 def cargar_preguntas():
     try:
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("SELECT v_content FROM alternative")
         preguntas = cursor.fetchall()
         cursor.close()
-        conn.close()
+        conexion.close()
         return jsonify(preguntas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -200,12 +200,12 @@ def insertar_pregunta():
 
         v_id = str(uuid.uuid4())
 
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("INSERT INTO alternative (v_id, v_content) VALUES (%s, %s)", (v_id, v_content))
-        conn.commit()
+        conexion.commit()
         cursor.close()
-        conn.close()
+        conexion.close()
         
         return jsonify({"mensaje": "Pregunta insertada correctamente", "v_id": v_id})
     

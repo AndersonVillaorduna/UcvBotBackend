@@ -20,16 +20,16 @@ def guardar_puntaje():
         # Generar UUID para v_id
         nivel_id = str(uuid.uuid4())
 
-        conn = conectar_db()
-        cursor = conn.cursor()
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         # Usar v_id en lugar de id_level
         query = "INSERT INTO level (v_id, puntaje, student_id, v_name) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (nivel_id, puntaje, estudiante_id, nombre_estudiante))
-        conn.commit()
+        conexion.commit()
 
         cursor.close()
-        conn.close()
+        conexion.close()
 
         return jsonify({'mensaje': 'Puntaje guardado correctamente'}), 200
 
