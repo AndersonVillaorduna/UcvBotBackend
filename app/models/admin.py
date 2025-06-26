@@ -28,7 +28,7 @@ def create(id, username, email, password):
         userExist = findByUserName(username)
         if userExist:
             return None
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("INSERT INTO admin (id, v_userName, v_email, v_password) VALUES (%s, %s, %s, %s)", (id, username, email, password))
         conexion.commit()
         return cursor.lastrowid
@@ -38,7 +38,7 @@ def create(id, username, email, password):
 def update(admin_id, username, email, password):
     conexion = conectar_db()
     try:
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("""
             UPDATE admin SET v_userName = %s, v_email = %s, v_password = %s WHERE id = %s
         """, (username, email, password, admin_id))
@@ -50,7 +50,7 @@ def update(admin_id, username, email, password):
 def delete(admin_id):
     conexion = conectar_db()
     try:
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("DELETE FROM admin WHERE id = %s", (admin_id,))
         conexion.commit()
         return cursor.rowcount
@@ -61,7 +61,7 @@ def delete(admin_id):
 def resetPassword(username, email, password):
     conexion = conectar_db()
     try:
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("""
             UPDATE admin SET v_password = %s WHERE v_userName = %s AND v_email = %s
         """, (password, username, email))
