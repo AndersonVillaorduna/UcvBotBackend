@@ -27,7 +27,7 @@ def login():
 
         if resultado:
             user_uid, nombre, apellido, hashed_password = resultado
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password):
+            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                 return jsonify({
                     'mensaje': 'Inicio de sesión exitoso',
                     'success': True,
