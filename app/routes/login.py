@@ -16,7 +16,10 @@ def login():
             return jsonify({'error': 'No se pudo conectar a la base de datos'}), 500
 
         cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        email_completo = f"{username}@ucvvirtual.edu.pe"
+        if "@ucvvirtual.edu.pe" not in username:
+            email_completo = f"{username}@ucvvirtual.edu.pe"
+        else:
+            email_completo = username
 
         cursor.execute("""
             SELECT v_userUID, v_userName, v_apellidoPaterno, v_password 
