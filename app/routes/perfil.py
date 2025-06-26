@@ -1,78 +1,58 @@
 import logging
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin  # ✅ IMPORTANTE
 from mini_db.conexion import conectar_db
-import psycopg2.extras  # ✅ Agregado
+import psycopg2.extras
 
 perfil_bp = Blueprint('perfil_bp', __name__)
 
-@perfil_bp.route('/perfil', methods=['GET'])
-def obtener_perfil():
-    user_uid = request.args.get('user_uid')
+@perfil_bp.route('/perfil', methods=['GET', 'PUT', 'OPTIONS'])
+@cross_origin()  # ✅ SOLUCIÓN AL ERROR CORS
+def perfil():
+    if request.method == 'OPTIONS':
+        return '', 200  # ✅ Respuesta rápida a la verificación previa (preflight)
 
-    try:
-        conn = conectar_db()
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)  # ✅ Corregido
+    if request.method == 'GET':
+        user_uid = request.args.get('user_uid')
+        try:
+            conexion = conectar_db()
+            cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cursor.execute("""
+                SELECT v_userName, v_email, v_username, v_apellidoPaterno, v_apellidoMaterno
+                FROM student WHERE v_userUID = %s
+            """, (user_uid,))
+            usuario = cursor.fetchone()
+            if usuario:
+                return jsonify(dict(usuario)), 200
+            else:
+                return jsonify({'error': 'Usuario no encontrado'}), 404
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
-        cursor.execute("""
-            SELECT 
-                v_userUID AS user_uid,
-                v_userName AS nombre,
-                v_apellidoPaterno AS apellidoPaterno,
-                v_apellidoMaterno AS apellidoMaterno,
-                v_email AS correo,
-                split_part(v_email, '@', 1) AS usuario,
-                v_photoURL AS foto
-            FROM student
-            WHERE v_userUID = %s
-        """, (user_uid,))
+    elif request.method == 'PUT':
+        try:
+            data = request.get_json(force=True)
+            user_uid = data.get('user_uid')
+            nombre = data.get('nombre')
+            correo = data.get('email')
+            username = data.get('username')
+            apellidoPaterno = data.get('apellidoPaterno')
+            apellidoMaterno = data.get('apellidoMaterno')
 
-        resultado = cursor.fetchone()
-        cursor.close()
-        conn.close()
+            conexion = conectar_db()
+            cursor = conexion.cursor()
 
-        if resultado:
-            return jsonify(dict(resultado))  # ✅ Asegura que jsonify acepte el resultado
-        else:
-            return jsonify({'error': 'Usuario no encontrado'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+            cursor.execute("""
+                UPDATE student SET 
+                    v_userName = %s,
+                    v_email = %s,
+                    v_username = %s,
+                    v_apellidoPaterno = %s,
+                    v_apellidoMaterno = %s
+                WHERE v_userUID = %s
+            """, (nombre, correo, username, apellidoPaterno, apellidoMaterno, user_uid))
+            conexion.commit()
+            return jsonify({'mensaje': 'Perfil actualizado correctamente'}), 200
 
-
-@perfil_bp.route('/perfil', methods=['PUT'])
-def actualizar_perfil():
-    try:
-        data = request.get_json(force=True)
-        user_uid = data.get('user_uid')
-        nombre = data.get('nombre')
-        apellidoPaterno = data.get('apellidoPaterno')
-        apellidoMaterno = data.get('apellidoMaterno')
-        foto = data.get('foto')
-
-        if not all([user_uid, nombre, apellidoPaterno, apellidoMaterno]):
-            return jsonify({'error': 'Faltan datos requeridos'}), 400
-
-        if foto and len(foto) > 500000:
-            return jsonify({'error': 'La imagen es muy grande'}), 400
-
-        logging.debug(f"📦 Datos recibidos: {data}")
-
-        conn = conectar_db()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE student
-            SET v_userName = %s,
-                v_apellidoPaterno = %s,
-                v_apellidoMaterno = %s,
-                v_photoURL = %s
-            WHERE v_userUID = %s
-        """, (nombre, apellidoPaterno, apellidoMaterno, foto, user_uid))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify({'mensaje': 'Perfil actualizado correctamente'}), 200
-    except Exception as e:
-        logging.exception("❌ Error en PUT /perfil")
-        return jsonify({'error': str(e)}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
