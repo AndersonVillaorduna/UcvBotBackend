@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 import uuid
 import bcrypt
 from mini_db.conexion import conectar_db
+import psycopg2.extras
 
 registro_bp = Blueprint('registro', __name__)
 
