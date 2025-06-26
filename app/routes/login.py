@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from mini_db.conexion import conectar_db
 import bcrypt
-
+import psycopg2.extras
 login_bp = Blueprint('login', __name__)
 
 @login_bp.route('/login', methods=['POST'])
