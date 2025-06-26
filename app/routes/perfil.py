@@ -19,7 +19,7 @@ def obtener_perfil():
                 v_apellidoPaterno AS apellidoPaterno,
                 v_apellidoMaterno AS apellidoMaterno,
                 v_email AS correo,
-                SUBSTRING_INDEX(v_email, '@', 1) AS usuario,
+                split_part(v_email, '@', 1) AS usuario,
                 v_photoURL AS foto
             FROM student
             WHERE v_userUID = %s
