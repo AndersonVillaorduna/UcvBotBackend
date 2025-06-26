@@ -17,33 +17,33 @@ def perfil():
 
     # === GET ===
     if request.method == 'GET':
-        # FIXED: Changed from 'v_userName' to 'user_uid' to match the URL parameter
         user_uid = request.args.get('user_uid')
         logging.info(f'🔎 Buscando perfil con UID: {user_uid}')
         
-        # Add validation to ensure user_uid is provided
         if not user_uid:
             logging.warning('⚠️ user_uid parameter is required')
             return jsonify({'error': 'user_uid parameter is required'}), 400
-            
+
         try:
             conexion = conectar_db()
             cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("""
                 SELECT 
-                v_userName, 
-                v_email, 
-                v_apellidoPaterno, 
-                v_apellidoMaterno
+                    v_userName, 
+                    v_email, 
+                    v_username,
+                    v_apellidoPaterno, 
+                    v_apellidoMaterno
                 FROM student
                 WHERE v_userUID = %s
-            """, (user_uid,))  # FIXED: Use user_uid instead of v_userName
+            """, (user_uid,))
             usuario = cursor.fetchone()
 
             if usuario:
                 datos_usuario = {
                     "v_userName": usuario["v_userName"],
                     "v_email": usuario["v_email"],
+                    "v_username": usuario["v_username"],  # ✅ AÑADIDO
                     "v_apellidoPaterno": usuario["v_apellidoPaterno"],
                     "v_apellidoMaterno": usuario["v_apellidoMaterno"]
                 }
@@ -56,7 +56,6 @@ def perfil():
             logging.error(f'❌ Error al obtener perfil: {e}')
             return jsonify({'error': str(e)}), 500
         finally:
-            # Close database connections properly
             if 'cursor' in locals():
                 cursor.close()
             if 'conexion' in locals():
@@ -69,15 +68,15 @@ def perfil():
             user_uid = data.get('user_uid')
             v_userName = data.get('v_userName')
             v_email = data.get('v_email')
+            v_username = data.get('v_username')
             apellidoPaterno = data.get('v_apellidoPaterno')
             apellidoMaterno = data.get('v_apellidoMaterno')
 
-            # Si no viene username, derivarlo del correo
-            if not v_userName and v_email:
-                v_userName = v_email.split('@')[0]
-                logging.info(f'🛠 Derivado username del correo: {v_userName}')
+            if not v_username and v_email:
+                v_username = v_email.split('@')[0]
+                logging.info(f'🛠 Derivado username del correo: {v_username}')
 
-            logging.info(f'🔄 Actualizando perfil UID {user_uid} con: {v_userName}, {v_email}, {apellidoPaterno}, {apellidoMaterno}')
+            logging.info(f'🔄 Actualizando perfil UID {user_uid} con: {v_userName}, {v_email}, {v_username}, {apellidoPaterno}, {apellidoMaterno}')
 
             conexion = conectar_db()
             cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -86,10 +85,11 @@ def perfil():
                 UPDATE student SET 
                     v_userName = %s,
                     v_email = %s,
+                    v_username = %s,
                     v_apellidoPaterno = %s,
                     v_apellidoMaterno = %s
                 WHERE v_userUID = %s
-            """, (v_userName, v_email, apellidoPaterno, apellidoMaterno, user_uid))
+            """, (v_userName, v_email, v_username, apellidoPaterno, apellidoMaterno, user_uid))
             conexion.commit()
 
             logging.info('✅ Perfil actualizado correctamente')
@@ -99,7 +99,6 @@ def perfil():
             logging.error(f'❌ Error al actualizar perfil: {e}')
             return jsonify({'error': str(e)}), 500
         finally:
-            # Close database connections properly
             if 'cursor' in locals():
                 cursor.close()
             if 'conexion' in locals():
