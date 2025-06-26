@@ -1,0 +1,34 @@
+# =========================
+# Ignorar entornos virtuales de Python
+venv/
+.env
+
+# =========================
+# Ignorar archivos de bases de datos locales
+*.sqlite
+*.db
+*.log
+
+# =========================
+# Node.js / Angular
+node_modules/
+dist/
+.angular/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# IDEs y editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+__pycache__/
