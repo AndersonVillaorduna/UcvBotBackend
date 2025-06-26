@@ -34,8 +34,8 @@ def registrar_usuario():
             conexion.close()
             return jsonify({'error': 'Este correo ya está registrado.'}), 409
 
-        # ✅ Encriptar la contraseña
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        # ✅ Encriptar la contraseña (corregido)
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         # ✅ Insertar nuevo usuario
         cursor.execute("""
