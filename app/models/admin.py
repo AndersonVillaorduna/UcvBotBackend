@@ -5,7 +5,7 @@ def findByUserName(username):
     if not conexion:
         return None
     try:
-        cursor = conexion.cursor(dictionary=True)
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT * FROM admin WHERE v_userName = %s", (username,))
         return cursor.fetchone()
     finally:
@@ -16,7 +16,7 @@ def findById(admin_id):
     if not conexion:
         return None
     try:
-        cursor = conexion.cursor(dictionary=True)
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT * FROM admin WHERE id = %s", (admin_id,))
         return cursor.fetchone()
     finally:
