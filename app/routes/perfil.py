@@ -4,7 +4,7 @@ from flask_cors import cross_origin
 from mini_db.conexion import conectar_db
 import psycopg2.extras
 
-# Configurar logging (si no está configurado antes)
+# Configurar logging
 logging.basicConfig(level=logging.INFO)
 
 perfil_bp = Blueprint('perfil_bp', __name__)
@@ -15,6 +15,7 @@ def perfil():
     if request.method == 'OPTIONS':
         return '', 200
 
+    # === GET ===
     if request.method == 'GET':
         user_uid = request.args.get('user_uid')
         logging.info(f'🔎 Buscando perfil con UID: {user_uid}')
@@ -28,9 +29,14 @@ def perfil():
             usuario = cursor.fetchone()
 
             if usuario:
-                datos_usuario = dict(usuario)
+                datos_usuario = {
+                    "v_userName": usuario["v_userName"],
+                    "v_email": usuario["v_email"],
+                    "v_username": usuario["v_username"],
+                    "v_apellidoPaterno": usuario["v_apellidoPaterno"],
+                    "v_apellidoMaterno": usuario["v_apellidoMaterno"]
+                }
                 logging.info(f'✅ Usuario encontrado: {datos_usuario}')
-                print(f'✅ Usuario encontrado: {datos_usuario}')
                 return jsonify(datos_usuario), 200
             else:
                 logging.warning('⚠️ Usuario no encontrado')
@@ -39,6 +45,7 @@ def perfil():
             logging.error(f'❌ Error al obtener perfil: {e}')
             return jsonify({'error': str(e)}), 500
 
+    # === PUT ===
     elif request.method == 'PUT':
         try:
             data = request.get_json(force=True)
