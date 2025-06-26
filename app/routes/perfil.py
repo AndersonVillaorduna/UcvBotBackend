@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from mini_db.conexion import conectar_db
-import logging
+import psycopg2.extras  # ✅ Agregado
 
 perfil_bp = Blueprint('perfil_bp', __name__)
 
@@ -10,7 +10,7 @@ def obtener_perfil():
 
     try:
         conn = conectar_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)  # ✅ Corregido
 
         cursor.execute("""
             SELECT 
@@ -30,7 +30,7 @@ def obtener_perfil():
         conn.close()
 
         if resultado:
-            return jsonify(resultado)
+            return jsonify(dict(resultado))  # ✅ Asegura que jsonify acepte el resultado
         else:
             return jsonify({'error': 'Usuario no encontrado'}), 404
     except Exception as e:
