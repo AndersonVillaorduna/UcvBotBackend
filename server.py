@@ -18,7 +18,7 @@ from app.routes.pregunta import pregunta_bp
 
 app = Flask(__name__)
 app.config['DEBUG'] = True  # ✅ Esto permite ver el traceback del error
-CORS(app, resources={r"/api/*": {"origins": "https://ucv-bot-frontend.vercel.app"}})
+CORS(app)
 
 @app.route('/')
 def home():
