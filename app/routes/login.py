@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from mini_db.conexion import conectar_db
 import bcrypt
 import psycopg2.extras
+
 login_bp = Blueprint('login', __name__)
 
 @login_bp.route('/login', methods=['POST'])
@@ -16,11 +17,14 @@ def login():
             return jsonify({'error': 'No se pudo conectar a la base de datos'}), 500
 
         cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Asegura que el correo esté completo
         if "@ucvvirtual.edu.pe" not in username:
             email_completo = f"{username}@ucvvirtual.edu.pe"
         else:
             email_completo = username
 
+        # Buscar usuario
         cursor.execute("""
             SELECT v_userUID, v_userName, v_apellidoPaterno, v_password 
             FROM student 
@@ -30,18 +34,24 @@ def login():
 
         if resultado:
             user_uid, nombre, apellido, hashed_password = resultado
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
-                return jsonify({
-                    'mensaje': 'Inicio de sesión exitoso',
-                    'success': True,
-                    'user_uid': user_uid,       # <- nombre coherente con la BD
-                    'nombre': nombre,
-                    'apellido': apellido,
-                    'email': email_completo,
-                    'rol': 'student'
-                }), 200
-            else:
-                return jsonify({'error': 'Contraseña incorrecta'}), 401
+
+            try:
+                # Validar contraseña (corrige el problema del 'Invalid salt')
+                if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
+                    return jsonify({
+                        'mensaje': 'Inicio de sesión exitoso',
+                        'success': True,
+                        'user_uid': user_uid,
+                        'nombre': nombre,
+                        'apellido': apellido,
+                        'email': email_completo,
+                        'rol': 'student'
+                    }), 200
+                else:
+                    return jsonify({'error': 'Contraseña incorrecta'}), 401
+            except ValueError as ve:
+                return jsonify({'error': f'Formato de hash inválido: {str(ve)}'}), 500
+
         else:
             return jsonify({'error': 'Usuario no encontrado'}), 404
 
