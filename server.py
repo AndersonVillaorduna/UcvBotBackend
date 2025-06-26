@@ -18,7 +18,7 @@ from app.routes.pregunta import pregunta_bp
 
 app = Flask(__name__)
 app.config['DEBUG'] = True  # ✅ Esto permite ver el traceback del error
-CORS(app, resources={r"/api/*": {"origins": "*"}}, methods=["GET", "POST", "PUT", "OPTIONS"], supports_credentials=True)
+CORS(app, resources={r"/api/*": {"origins": "https://ucv-bot-frontend.vercel.app"}})
 
 @app.route('/')
 def home():
@@ -34,8 +34,8 @@ def predict():
 # Registrar rutas
 app.register_blueprint(studentRoutes, url_prefix='/api/students')
 app.register_blueprint(messageRoutes, url_prefix='/api/messages')
-app.register_blueprint(levelRoutes, url_prefix='/api/level')
-app.register_blueprint(adminRoutes, url_prefix='/api/admins')
+app.register_blueprint(levelRoutes, url_prefix='/api/level')#
+app.register_blueprint(adminRoutes, url_prefix='/api/admins')#
 app.register_blueprint(alternativeRoutes, url_prefix='/api/alternative')
 app.register_blueprint(chatRoutes, url_prefix='/api/chats')
 app.register_blueprint(registro_bp, url_prefix='/api')
