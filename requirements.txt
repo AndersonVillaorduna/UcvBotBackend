@@ -1,0 +1,7 @@
+python-dotenv
+Flask
+flask-cors
+openai==0.28
+psycopg2-binary
+bcrypt
+google-generativeai

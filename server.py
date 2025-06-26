@@ -1,5 +1,9 @@
 from flask import Flask, request, jsonify
+import os
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.routes.students import studentRoutes
 from app.routes.admins import adminRoutes
@@ -15,7 +19,6 @@ from app.routes.pregunta import pregunta_bp
 app = Flask(__name__)
 app.config['DEBUG'] = True  # ✅ Esto permite ver el traceback del error
 CORS(app)
-CORS(app, supports_credentials=True)
 
 @app.route('/')
 def home():
@@ -31,6 +34,7 @@ def predict():
 # Registrar rutas
 app.register_blueprint(studentRoutes, url_prefix='/api/students')
 app.register_blueprint(messageRoutes, url_prefix='/api/messages')
+app.register_blueprint(levelRoutes, url_prefix='/api/level')
 app.register_blueprint(adminRoutes, url_prefix='/api/admins')
 app.register_blueprint(alternativeRoutes, url_prefix='/api/alternative')
 app.register_blueprint(chatRoutes, url_prefix='/api/chats')
@@ -38,6 +42,7 @@ app.register_blueprint(registro_bp, url_prefix='/api')
 app.register_blueprint(login_bp, url_prefix='/api')
 app.register_blueprint(perfil_bp, url_prefix='/api')
 app.register_blueprint(pregunta_bp, url_prefix='/api')
-app.register_blueprint(levelRoutes, url_prefix='/api')
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Render usa PORT
+    app.run(host="0.0.0.0", port=port)
