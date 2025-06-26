@@ -206,6 +206,9 @@ def insertar_pregunta():
         conn.commit()
         cursor.close()
         conn.close()
+        
         return jsonify({"mensaje": "Pregunta insertada correctamente", "v_id": v_id})
+    
     except Exception as e:
-        return
+        print("❌ Error insertando pregunta:", str(e))
+        return jsonify({"error": "Error insertando pregunta", "detalle": str(e)}), 500

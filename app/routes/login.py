@@ -18,32 +18,31 @@ def login():
 
         cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Asegura que el correo esté completo
         if "@ucvvirtual.edu.pe" not in username:
             email_completo = f"{username}@ucvvirtual.edu.pe"
         else:
             email_completo = username
 
-        # Buscar usuario
+        # ✅ Obtener también el apellido materno
         cursor.execute("""
-            SELECT v_userUID, v_userName, v_apellidoPaterno, v_password 
+            SELECT v_userUID, v_userName, v_apellidoPaterno, v_apellidoMaterno, v_password 
             FROM student 
             WHERE v_email = %s
         """, (email_completo,))
         resultado = cursor.fetchone()
 
         if resultado:
-            user_uid, nombre, apellido, hashed_password = resultado
+            user_uid, nombre, apellidoPaterno, apellidoMaterno, hashed_password = resultado
 
             try:
-                # Validar contraseña (corrige el problema del 'Invalid salt')
                 if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
                     return jsonify({
                         'mensaje': 'Inicio de sesión exitoso',
                         'success': True,
                         'user_uid': user_uid,
                         'nombre': nombre,
-                        'apellido': apellido,
+                        'apellidoPaterno': apellidoPaterno,
+                        'apellidoMaterno': apellidoMaterno,
                         'email': email_completo,
                         'rol': 'student'
                     }), 200
