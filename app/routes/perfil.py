@@ -33,11 +33,11 @@ def perfil():
         try:
             data = request.get_json(force=True)
             user_uid = data.get('user_uid')
-            nombre = data.get('nombre')
-            correo = data.get('email')
-            username = data.get('username')
-            apellidoPaterno = data.get('apellidoPaterno')
-            apellidoMaterno = data.get('apellidoMaterno')
+            nombre = data.get('v_userName')
+            correo = data.get('v_email')
+            username = data.get('v_username')
+            apellidoPaterno = data.get('v_apellidoPaterno')
+            apellidoMaterno = data.get('v_apellidoMaterno')
 
             conexion = conectar_db()
             cursor = conexion.cursor()
