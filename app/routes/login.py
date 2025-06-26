@@ -18,12 +18,13 @@ def login():
 
         cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
+        # Completar dominio institucional si no lo incluye
         if "@ucvvirtual.edu.pe" not in username:
             email_completo = f"{username}@ucvvirtual.edu.pe"
         else:
             email_completo = username
 
-        # ✅ Obtener también el apellido materno
+        # Buscar usuario incluyendo nombre completo
         cursor.execute("""
             SELECT v_userUID, v_userName, v_apellidoPaterno, v_apellidoMaterno, v_password 
             FROM student 
