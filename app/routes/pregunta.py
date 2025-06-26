@@ -5,7 +5,7 @@ import google.generativeai as genai
 from mini_db.conexion import conectar_db
 import uuid
 
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '.env'))
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 pregunta_bp = Blueprint('pregunta_bp', __name__)
