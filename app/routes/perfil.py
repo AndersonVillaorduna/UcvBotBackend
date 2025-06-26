@@ -17,8 +17,15 @@ def perfil():
 
     # === GET ===
     if request.method == 'GET':
+        # FIXED: Changed from 'v_userName' to 'user_uid' to match the URL parameter
         user_uid = request.args.get('user_uid')
         logging.info(f'🔎 Buscando perfil con UID: {user_uid}')
+        
+        # Add validation to ensure user_uid is provided
+        if not user_uid:
+            logging.warning('⚠️ user_uid parameter is required')
+            return jsonify({'error': 'user_uid parameter is required'}), 400
+            
         try:
             conexion = conectar_db()
             cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -30,7 +37,7 @@ def perfil():
                 v_apellidoMaterno
                 FROM student
                 WHERE v_userUID = %s
-            """, (user_uid,))
+            """, (user_uid,))  # FIXED: Use user_uid instead of v_userName
             usuario = cursor.fetchone()
 
             if usuario:
@@ -48,6 +55,12 @@ def perfil():
         except Exception as e:
             logging.error(f'❌ Error al obtener perfil: {e}')
             return jsonify({'error': str(e)}), 500
+        finally:
+            # Close database connections properly
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conexion' in locals():
+                conexion.close()
 
     # === PUT ===
     elif request.method == 'PUT':
@@ -85,3 +98,9 @@ def perfil():
         except Exception as e:
             logging.error(f'❌ Error al actualizar perfil: {e}')
             return jsonify({'error': str(e)}), 500
+        finally:
+            # Close database connections properly
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conexion' in locals():
+                conexion.close()
