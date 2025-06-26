@@ -12,7 +12,7 @@ def guardar_puntaje():
         return '', 200  # Preflight CORS
 
     try:
-        data = request.get_json(force=True)
+        data = request.get_json()
         puntaje = data.get('puntaje')
         estudiante_id = data.get('student_id')
         nombre_estudiante = data.get('nombre')
