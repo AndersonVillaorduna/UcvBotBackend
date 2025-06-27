@@ -24,13 +24,13 @@ def obtener_perfil():
 
         cursor.execute("""
             SELECT 
-                v_userUID AS user_uid,
-                v_userName AS nombre,
-                v_apellidoPaterno AS apellidoPaterno,
-                v_apellidoMaterno AS apellidoMaterno,
-                v_email AS correo,
-                SPLIT_PART(v_email, '@', 1) AS usuario,
-                v_photoURL AS foto
+                v_userUID AS "user_uid",
+                v_userName AS "nombre",
+                v_apellidoPaterno AS "apellidoPaterno",
+                v_apellidoMaterno AS "apellidoMaterno",
+                v_email AS "correo",
+                SPLIT_PART(v_email, '@', 1) AS "usuario",
+                v_photoURL AS "foto"
             FROM student
             WHERE v_userUID = %s
         """, (user_uid,))
@@ -40,7 +40,7 @@ def obtener_perfil():
         conexion.close()
 
         if resultado:
-            return jsonify(dict(resultado))  # ✅ convierte a objeto JSON con claves
+            return jsonify(dict(resultado))  # ✅ Convierte DictRow a JSON con claves
         else:
             logging.warning('⚠️ Usuario no encontrado')
             return jsonify({'error': 'Usuario no encontrado'}), 404
