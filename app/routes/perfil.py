@@ -68,7 +68,9 @@ def actualizar_perfil():
         logging.info(f"🔄 Actualizando perfil UID {user_uid}")
 
         conexion = conectar_db()
-        cursor = conexion.cursor()
+        if not conexion:
+            logging.error("❌ No se pudo conectar a la base de datos para actualizar")
+            return jsonify({'error': 'Fallo en la conexión a la base de datos'}), 500
 
         cursor = conexion.cursor()
         cursor.execute("""
