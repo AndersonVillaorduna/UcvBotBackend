@@ -4,6 +4,7 @@ import logging
 import psycopg2.extras
 
 perfil_bp = Blueprint('perfil_bp', __name__)
+logging.basicConfig(level=logging.INFO)
 
 @perfil_bp.route('/perfil', methods=['GET'])
 def obtener_perfil():
@@ -11,7 +12,15 @@ def obtener_perfil():
 
     try:
         conexion = conectar_db()
-        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        if not conexion:
+            logging.error("❌ No se pudo conectar a la base de datos")
+            return jsonify({'error': 'Fallo en la conexión a la base de datos'}), 500
+
+        try:
+            cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        except Exception as e:
+            logging.error(f'❌ Error al obtener cursor: {e}')
+            return jsonify({'error': 'Fallo al obtener cursor'}), 500
 
         cursor.execute("""
             SELECT 
@@ -31,12 +40,14 @@ def obtener_perfil():
         conexion.close()
 
         if resultado:
-            return jsonify(resultado)
+            return jsonify(dict(resultado))  # ✅ convierte a objeto JSON con claves
         else:
+            logging.warning('⚠️ Usuario no encontrado')
             return jsonify({'error': 'Usuario no encontrado'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
+    except Exception as e:
+        logging.exception("❌ Error al obtener perfil")
+        return jsonify({'error': str(e)}), 500
 
 @perfil_bp.route('/perfil', methods=['PUT'])
 def actualizar_perfil():
@@ -54,11 +65,12 @@ def actualizar_perfil():
         if foto and len(foto) > 500000:
             return jsonify({'error': 'La imagen es muy grande'}), 400
 
-        logging.debug(f"📦 Datos recibidos: {data}")
+        logging.info(f"🔄 Actualizando perfil UID {user_uid}")
 
         conexion = conectar_db()
         cursor = conexion.cursor()
 
+        cursor = conexion.cursor()
         cursor.execute("""
             UPDATE student
             SET v_userName = %s,
@@ -72,7 +84,9 @@ def actualizar_perfil():
         cursor.close()
         conexion.close()
 
+        logging.info("✅ Perfil actualizado correctamente")
         return jsonify({'mensaje': 'Perfil actualizado correctamente'}), 200
+
     except Exception as e:
         logging.exception("❌ Error en PUT /perfil")
         return jsonify({'error': str(e)}), 500
