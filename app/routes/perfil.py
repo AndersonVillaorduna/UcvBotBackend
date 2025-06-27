@@ -57,7 +57,7 @@ def actualizar_perfil():
         logging.debug(f"📦 Datos recibidos: {data}")
 
         conexion = conectar_db()
-        cursor = conn.cursor()
+        cursor = conexion.cursor()
 
         cursor.execute("""
             UPDATE student
@@ -68,7 +68,7 @@ def actualizar_perfil():
             WHERE v_userUID = %s
         """, (nombre, apellidoPaterno, apellidoMaterno, foto, user_uid))
 
-        conn.commit()
+        conexion.commit()
         cursor.close()
         conexion.close()
 
