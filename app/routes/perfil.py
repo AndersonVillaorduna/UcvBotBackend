@@ -1,99 +1,78 @@
-import logging
-import traceback
 from flask import Blueprint, request, jsonify
 from mini_db.conexion import conectar_db
+import logging
 import psycopg2.extras
-
-logging.basicConfig(level=logging.INFO)
 
 perfil_bp = Blueprint('perfil_bp', __name__)
 
-@perfil_bp.route('/perfil', methods=['GET', 'PUT'])
-def perfil():
+@perfil_bp.route('/perfil', methods=['GET'])
+def obtener_perfil():
+    user_uid = request.args.get('user_uid')
 
-    if request.method == 'GET':
-        user_uid = request.args.get('user_uid')
-        logging.info(f'🔎 Buscando perfil con UID: {user_uid}')
-        
-        if not user_uid:
-            logging.warning('⚠️ Falta parámetro user_uid')
-            return jsonify({'error': 'user_uid parameter is required'}), 400
+    try:
+        conexion = conectar_db()
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        try:
-            conexion = conectar_db()
-            cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            cursor.execute("""
-                SELECT 
-                    v_userName, 
-                    v_email, 
-                    v_apellidoPaterno, 
-                    v_apellidoMaterno
-                FROM student
-                WHERE v_userUID = %s
-            """, (user_uid,))
-            
-            usuario = cursor.fetchone()
+        cursor.execute("""
+            SELECT 
+                v_userUID AS user_uid,
+                v_userName AS nombre,
+                v_apellidoPaterno AS apellidoPaterno,
+                v_apellidoMaterno AS apellidoMaterno,
+                v_email AS correo,
+                SUBSTRING_INDEX(v_email, '@', 1) AS usuario,
+                v_photoURL AS foto
+            FROM student
+            WHERE v_userUID = %s
+        """, (user_uid,))
 
-            if usuario:
-                datos_usuario = {
-                    "v_userName": usuario["v_userName"],
-                    "v_email": usuario["v_email"],
-                    "v_apellidoPaterno": usuario["v_apellidoPaterno"],
-                    "v_apellidoMaterno": usuario["v_apellidoMaterno"]
-                }
-                logging.info(f'✅ Usuario encontrado: {datos_usuario}')
-                return jsonify(datos_usuario), 200
-            else:
-                logging.warning('⚠️ Usuario no encontrado')
-                return jsonify({'error': 'Usuario no encontrado'}), 404
+        resultado = cursor.fetchone()
+        cursor.close()
+        conexion.close()
 
-        except Exception as e:
-            logging.error(f'❌ Error al obtener perfil: {e}')
-            logging.error(traceback.format_exc())
-            return jsonify({'error': str(e)}), 500
-        finally:
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conexion' in locals():
-                conexion.close()
+        if resultado:
+            return jsonify(resultado)
+        else:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    elif request.method == 'PUT':
-        try:
-            data = request.get_json(force=True)
-            user_uid = data.get('user_uid')
-            v_userName = data.get('v_userName')
-            v_email = data.get('v_email')
-            apellidoPaterno = data.get('v_apellidoPaterno')
-            apellidoMaterno = data.get('v_apellidoMaterno')
 
-            if not v_userName and v_email:
-                v_userName = v_email.split('@')[0]
-                logging.info(f'🛠 Derivado nombre del correo: {v_userName}')
+@perfil_bp.route('/perfil', methods=['PUT'])
+def actualizar_perfil():
+    try:
+        data = request.get_json(force=True)
+        user_uid = data.get('user_uid')
+        nombre = data.get('nombre')
+        apellidoPaterno = data.get('apellidoPaterno')
+        apellidoMaterno = data.get('apellidoMaterno')
+        foto = data.get('foto')
 
-            logging.info(f'🔄 Actualizando perfil UID {user_uid} con: {v_userName}, {v_email}, {apellidoPaterno}, {apellidoMaterno}')
+        if not all([user_uid, nombre, apellidoPaterno, apellidoMaterno]):
+            return jsonify({'error': 'Faltan datos requeridos'}), 400
 
-            conexion = conectar_db()
-            cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        if foto and len(foto) > 500000:
+            return jsonify({'error': 'La imagen es muy grande'}), 400
 
-            cursor.execute("""
-                UPDATE student SET 
-                    v_userName = %s,
-                    v_email = %s,
-                    v_apellidoPaterno = %s,
-                    v_apellidoMaterno = %s
-                WHERE v_userUID = %s
-            """, (v_userName, v_email, apellidoPaterno, apellidoMaterno, user_uid))
-            conexion.commit()
+        logging.debug(f"📦 Datos recibidos: {data}")
 
-            logging.info('✅ Perfil actualizado correctamente')
-            return jsonify({'mensaje': 'Perfil actualizado correctamente'}), 200
+        conexion = conectar_db()
+        cursor = conn.cursor()
 
-        except Exception as e:
-            logging.error(f'❌ Error al actualizar perfil: {e}')
-            logging.error(traceback.format_exc())
-            return jsonify({'error': str(e)}), 500
-        finally:
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conexion' in locals():
-                conexion.close()
+        cursor.execute("""
+            UPDATE student
+            SET v_userName = %s,
+                v_apellidoPaterno = %s,
+                v_apellidoMaterno = %s,
+                v_photoURL = %s
+            WHERE v_userUID = %s
+        """, (nombre, apellidoPaterno, apellidoMaterno, foto, user_uid))
+
+        conn.commit()
+        cursor.close()
+        conexion.close()
+
+        return jsonify({'mensaje': 'Perfil actualizado correctamente'}), 200
+    except Exception as e:
+        logging.exception("❌ Error en PUT /perfil")
+        return jsonify({'error': str(e)}), 500
