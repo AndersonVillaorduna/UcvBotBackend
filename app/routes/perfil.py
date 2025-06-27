@@ -16,11 +16,7 @@ def obtener_perfil():
             logging.error("❌ No se pudo conectar a la base de datos")
             return jsonify({'error': 'Fallo en la conexión a la base de datos'}), 500
 
-        try:
-            cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        except Exception as e:
-            logging.error(f'❌ Error al obtener cursor: {e}')
-            return jsonify({'error': 'Fallo al obtener cursor'}), 500
+        cursor = conexion.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cursor.execute("""
             SELECT 
@@ -40,7 +36,7 @@ def obtener_perfil():
         conexion.close()
 
         if resultado:
-            return jsonify(dict(resultado))  # ✅ Convierte DictRow a JSON con claves
+            return jsonify(dict(resultado))
         else:
             logging.warning('⚠️ Usuario no encontrado')
             return jsonify({'error': 'Usuario no encontrado'}), 404
@@ -62,8 +58,13 @@ def actualizar_perfil():
         if not all([user_uid, nombre, apellidoPaterno, apellidoMaterno]):
             return jsonify({'error': 'Faltan datos requeridos'}), 400
 
-        if foto and len(foto) > 500000:
-            return jsonify({'error': 'La imagen es muy grande'}), 400
+        # Permitir imágenes base64 hasta 1.5MB aprox (base64 es ~33% más grande que el archivo real)
+        if foto and len(foto) > 1500000:
+            return jsonify({'error': 'La imagen es demasiado grande. Usa una menor a 1.5MB'}), 400
+
+        # Validar tipo MIME base64 (opcional)
+        if foto and not (foto.startswith('data:image/jpeg;base64,') or foto.startswith('data:image/png;base64,')):
+            return jsonify({'error': 'Formato de imagen no permitido. Solo JPG o PNG'}), 400
 
         logging.info(f"🔄 Actualizando perfil UID {user_uid}")
 
