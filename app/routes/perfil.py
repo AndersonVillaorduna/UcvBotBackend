@@ -1,6 +1,5 @@
 import logging
 from flask import Blueprint, request, jsonify
-from flask_cors import cross_origin
 from mini_db.conexion import conectar_db
 import psycopg2.extras
 
@@ -9,12 +8,8 @@ logging.basicConfig(level=logging.INFO)
 
 perfil_bp = Blueprint('perfil_bp', __name__)
 
-@perfil_bp.route('/perfil', methods=['GET', 'PUT', 'OPTIONS'])
-@cross_origin()
+@perfil_bp.route('/perfil', methods=['GET', 'PUT'])
 def perfil():
-    if request.method == 'OPTIONS':
-        return '', 200
-
     # === GET ===
     if request.method == 'GET':
         user_uid = request.args.get('user_uid')
