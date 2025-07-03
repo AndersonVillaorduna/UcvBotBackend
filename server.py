@@ -18,7 +18,9 @@ from app.routes.pregunta import pregunta_bp
 
 app = Flask(__name__)
 app.config['DEBUG'] = True  # ✅ Esto permite ver el traceback del error
-CORS(app)
+
+# ✅ Activar CORS globalmente con soporte de credenciales
+CORS(app, supports_credentials=True)
 
 @app.route('/')
 def home():
